@@ -169,9 +169,9 @@
     <VisualStudio AllowExistingFolder="true" />
   </ProjectExtensions>
   <PropertyGroup>
-    <PostBuildEvent>"C:\Users\Got\Desktop\KSP\Tools\pdb2mdb_2015\pdb2mdb.exe" "C:\Users\Got\Source\Repos\ShotgunKerbalism\Kerbalism\src\bin\Debug\Kerbalism.dll"
-xcopy /Y "C:\Users\Got\Source\Repos\ShotgunKerbalism\Kerbalism\src\bin\Debug\Kerbalism.dll" "C:\Users\Got\Source\Repos\ShotgunKerbalism\Kerbalism\GameData\Kerbalism"
-xcopy /Y "C:\Users\Got\Source\Repos\ShotgunKerbalism\Kerbalism\src\bin\Debug\Kerbalism.dll.mdb" "C:\Users\Got\Source\Repos\ShotgunKerbalism\Kerbalism\GameData\Kerbalism"
-xcopy /Y "C:\Users\Got\Source\Repos\ShotgunKerbalism\Kerbalism\GameData\Kerbalism" "C:\Users\Got\Desktop\KSP\Kerbal.Space.Program.v1.2.2.1622.DEV\GameData\Kerbalism\"</PostBuildEvent>
+    <PostBuildEvent>"$(ProjectDir)misc\VisualStudio\buildscripts\UnityDebug\pdb2mdb.exe" "$(ProjectDir)src\bin\Debug\Kerbalism.dll"
+xcopy /Y "$(ProjectDir)src\bin\Debug\Kerbalism.dll" "$(ProjectDir)GameData\Kerbalism"
+xcopy /Y "$(ProjectDir)src\bin\Debug\Kerbalism.dll.mdb" "$(ProjectDir)GameData\Kerbalism"
+xcopy /Y "$(ProjectDir)GameData\Kerbalism" "C:\Users\Pitou\Desktop\Kerbal.Space.Program.v1.2.2.1622.DEV\GameData\Kerbalism\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
