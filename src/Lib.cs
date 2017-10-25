@@ -571,7 +571,7 @@ public static class Lib
   // pretty-print cost
   public static string HumanReadableCost(double v)
   {
-    return Lib.BuildString(v.ToString("F0"), " √");
+    return Lib.BuildString(v.ToString("F0"), " $");
   }
 
   // format a value, or return 'none'
@@ -638,6 +638,25 @@ public static class Lib
     return FlightDriver.Pause || Planetarium.Pause;
   }
 
+  // return true if a tutorial scenario is active
+  public static bool IsScenario()
+  {
+    return HighLogic.CurrentGame.Mode == Game.Modes.SCENARIO
+        || HighLogic.CurrentGame.Mode == Game.Modes.SCENARIO_NON_RESUMABLE;
+  }
+
+  // disable the module and return true if a tutorial scenario is active
+  public static bool DisableScenario(PartModule m)
+  {
+    if (IsScenario())
+    {
+      m.enabled = false;
+      m.isEnabled = false;
+      return true;
+    }
+    return false;
+  }
+
 
   // --- BODY -----------------------------------------------------------------
 
@@ -665,17 +684,14 @@ public static class Lib
   }
 
   // return terrain height at point specified
-  // note: body terrain must be loaded for this to work: use it only for loaded vessels
-  // note: also beware that the results doesn't seem to be exact
-  public static double TerrainHeight(Vessel v)
+  // - body terrain must be loaded for this to work: use it only for loaded vessels
+  public static double TerrainHeight(CelestialBody body, Vector3d pos)
   {
-    //return v.terrainAltitude;
-    PQS pqs = v.mainBody.pqsController;
-    return pqs == null ? 0.0 : pqs.GetAltitude(v.GetWorldPos3D());
-
-    // this too work, but the number seems off a bit
-    //Vector3d p = QuaternionD.AngleAxis(v.longitude, Vector3d.down) * QuaternionD.AngleAxis(v.latitude, Vector3d.forward) * Vector3d.right;
-    //return pqs.GetSurfaceHeight(p) - pqs.radius;*/
+    PQS pqs = body.pqsController;
+    if (pqs == null) return 0.0;
+    Vector2d latlong = body.GetLatitudeAndLongitude(pos);
+    Vector3d radial = QuaternionD.AngleAxis(latlong.y, Vector3d.down) * QuaternionD.AngleAxis(latlong.x, Vector3d.forward) * Vector3d.right;
+    return (pos - body.position).magnitude - pqs.GetSurfaceHeight(radial);
   }
 
 
@@ -1431,7 +1447,7 @@ public static class Lib
     (
       new Vector2(0.5f, 0.5f),
       new Vector2(0.5f, 0.5f),
-      new MultiOptionDialog(msg, title, HighLogic.UISkin, one, two),
+      new MultiOptionDialog(title, msg, title, HighLogic.UISkin, one, two),
       false,
       HighLogic.UISkin,
       true,

@@ -27,6 +27,9 @@ public sealed class Habitat : PartModule, ISpecifics, IConfigurable
   // pseudo-ctor
   public override void OnStart(StartState state)
   {
+    // don't break tutorial scenarios
+    if (Lib.DisableScenario(this)) return;
+
     // calculate habitat internal volume
     if (volume <= double.Epsilon) volume = Lib.PartVolume(part);
 
@@ -239,6 +242,15 @@ public sealed class Habitat : PartModule, ISpecifics, IConfigurable
         set_flow(false);
         state = venting();
         break;
+    }
+
+    // instant pressurization and scrubbing inside breathable atmosphere
+    if (!Lib.IsEditor() && Cache.VesselInfo(vessel).breathable && inflate.Length == 0)
+    {
+      var atmo = part.Resources["Atmosphere"];
+      var waste = part.Resources["WasteAtmosphere"];
+      if (Features.Pressure) atmo.amount = atmo.maxAmount;
+      if (Features.Poisoning) waste.amount = 0.0;
     }
   }
 

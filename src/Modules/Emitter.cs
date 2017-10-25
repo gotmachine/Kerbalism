@@ -26,6 +26,9 @@ public sealed class Emitter : PartModule, ISpecifics
   // pseudo-ctor
   public override void OnStart(StartState state)
   {
+    // don't break tutorial scenarios
+    if (Lib.DisableScenario(this)) return;
+
     // update RMB ui
     Fields["Status"].guiName = radiation >= 0.0 ? "Radiation" : "Active shielding";
     Events["Toggle"].active = toggle;
@@ -104,7 +107,6 @@ public sealed class Emitter : PartModule, ISpecifics
 
     return Specs().info(desc);
   }
-
 
   // specifics support
   public Specifics Specs()
