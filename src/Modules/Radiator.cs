@@ -338,7 +338,6 @@ namespace KERBALISM
             }
             Array.Sort(dim);
             surface = dim[1] * dim[2];
-
             return true;
         }
 
