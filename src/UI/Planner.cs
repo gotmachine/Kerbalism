@@ -739,7 +739,7 @@ namespace KERBALISM {
       scrubbed = sim.resource("WasteAtmosphere").consumed > 0.0 || env.breathable;
 
       // calculate environnement (solar/body/albedo/background) flux (W)
-      env_flux = Habitat.env_flux(surface, env.temperature, Settings.TemperatureIdeal);
+      env_flux = Habitat.env_flux(surface, env.temperature, Settings.TemperatureIdeal, env.total_flux);
 
       // calculate heat produced by kerbal bodies (W)
       crew_flux = Habitat.kerbal_flux((int) crew_count);
@@ -748,13 +748,15 @@ namespace KERBALISM {
       atmo_flux = Habitat.atmo_flux(null, env.body, env.altitude, surface, env.temperature, Settings.TemperatureIdeal);
 
       // calculate habitat net thermal flux (W)
-      net_flux = env_flux + crew_flux + atmo_flux;
+      total_flux = env_flux + crew_flux + atmo_flux;
+
+      above_ideal_pos_modifier = Habitat.above_ideal_pos_modifier(1.0, total_flux);
+      above_ideal_neg_modifier = Habitat.above_ideal_neg_modifier(1.0, total_flux);
+      below_ideal_pos_modifier = Habitat.below_ideal_pos_modifier(1.0, total_flux);
+      below_ideal_neg_modifier = Habitat.below_ideal_neg_modifier(1.0, total_flux);
 
       // habitat temperature degeneration factor
-      temperature_modifier = Habitat.climatization_modifier(Settings.TemperatureIdeal);
-
-      // climatization temperature degeneration factor
-      climatization_modifier = Habitat.climatization_modifier(Settings.TemperatureIdeal);
+      temperature_modifier = Habitat.temperature_modifier(Settings.TemperatureIdeal);
     }
 
 
@@ -939,9 +941,12 @@ namespace KERBALISM {
     public double env_flux;                               // environnement (solar/body/albedo/background) flux (W)
     public double crew_flux;                              // heat produced by kerbal bodies (W)
     public double atmo_flux;                              // atmospheric convection/conduction flux (W)
-    public double net_flux;                               // habitat net thermal flux (W)
+    public double total_flux;                               // habitat net thermal flux (W)
+    public double above_ideal_pos_modifier;
+    public double above_ideal_neg_modifier;
+    public double below_ideal_pos_modifier;
+    public double below_ideal_neg_modifier;
     public double temperature_modifier;                   // habitat temperature degeneration factor
-    public double climatization_modifier;                 // habitat temperature difference, minus 1/4 the threshold
 
     // radiation related
     public double emitted;                                // amount of radiation emitted by components

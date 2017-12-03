@@ -305,7 +305,7 @@ public sealed class resource_recipe
     // determine worst input ratio
     // - pure input recipes can just underflow
     double worst_input = left;
-    if (outputs.Count > 0)
+    if (outputs.Count > 0 || canUnderflow == false)
     {
       for(int i=0; i<inputs.Count; ++i)
       {
@@ -356,9 +356,10 @@ public sealed class resource_recipe
   }
 
 
-  public List<entry>  inputs;   // set of input resources
-  public List<entry>  outputs;  // set of output resources
-  public double       left;     // what proportion of the recipe is left to execute
+  public List<entry>  inputs;              // set of input resources
+  public List<entry>  outputs;             // set of output resources
+  public double       left;                // what proportion of the recipe is left to execute
+  public bool         canUnderflow = true; // if true, input only process doesn't require all input resources to be available
 }
 
 

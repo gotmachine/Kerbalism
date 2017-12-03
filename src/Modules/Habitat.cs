@@ -22,7 +22,6 @@ namespace KERBALISM {
     // rmb ui status strings
     [KSPField(guiActive = false, guiActiveEditor = true, guiName = "Volume")] public string Volume;
     [KSPField(guiActive = false, guiActiveEditor = true, guiName = "Surface")] public string Surface;
-    [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Temperature (K)", guiFormat = "F1")] public double Temperature;
     [KSPField(guiActive = true, guiActiveEditor = false, guiName = "atmo flux   (W)", guiFormat = "F1")] public double atmoflux;
     [KSPField(guiActive = true, guiActiveEditor = false, guiName = "env flux    (W)", guiFormat = "F1")] public double envflux;
     [KSPField(guiActive = true, guiActiveEditor = false, guiName = "kerbal flux (W)", guiFormat = "F1")] public double kerbalflux;
@@ -44,7 +43,7 @@ namespace KERBALISM {
       if (surface <= double.Epsilon) surface = Lib.PartSurface(part);
 
       // calculate habitat heat capacity
-      if (heat_capacity <= double.Epsilon) heat_capacity = Settings.HabSpecificHeat * volume * Settings.TemperatureIdeal;
+      if (heat_capacity <= double.Epsilon) heat_capacity = Settings.HabSpecificHeat * volume * Settings.TemperatureThreshold * 2.5;
 
       // set RMB UI status strings
       Volume = Lib.HumanReadableVolume(volume);
@@ -63,8 +62,6 @@ namespace KERBALISM {
 
     public void Configure(bool enable)
     {
-      Fields["Temperature"].guiActive = enable;
-
       if (enable)
       {
         // if never set, this is the case if:
@@ -78,8 +75,9 @@ namespace KERBALISM {
           Lib.AddResource(part, "Atmosphere", (state == State.enabled && Features.Pressure) ? volume : 0.0, volume);
           Lib.AddResource(part, "WasteAtmosphere", 0.0, volume);
 
-          // add heat resource to reach ideal temperature
-          Lib.AddResource(part, "HabWatts", heat_capacity, heat_capacity * 2.0);
+          // add heat resources to reach ideal temperature
+          Lib.AddResource(part, "PosWatts", heat_capacity, heat_capacity);
+          Lib.AddResource(part, "NegWatts", heat_capacity, heat_capacity);
 
           // add external surface shielding
           Lib.AddResource(part, "Shielding", 0.0, surface);
@@ -96,7 +94,8 @@ namespace KERBALISM {
         Lib.RemoveResource(part, "Atmosphere", 0.0, volume);
         Lib.RemoveResource(part, "WasteAtmosphere", 0.0, volume);
         Lib.RemoveResource(part, "Shielding", 0.0, surface);
-        Lib.RemoveResource(part, "HabWatts", 0.0, 0.0);
+        Lib.RemoveResource(part, "PosWatts", 0.0, 0.0);
+        Lib.RemoveResource(part, "NegWatts", 0.0, 0.0);
       }
     }
 
@@ -106,7 +105,8 @@ namespace KERBALISM {
       Lib.SetResourceFlow(part, "Atmosphere", b);
       Lib.SetResourceFlow(part, "WasteAtmosphere", b);
       Lib.SetResourceFlow(part, "Shielding", b);
-      Lib.SetResourceFlow(part, "HabWatts", b);
+      Lib.SetResourceFlow(part, "PosWatts", b);
+      Lib.SetResourceFlow(part, "NegWatts", b);
     }
 
 
@@ -236,17 +236,13 @@ namespace KERBALISM {
 
     public void FixedUpdate()
     {
-      if (part.Resources.Contains("HabWatts"))
-      {
-        Temperature = (part.Resources["HabWatts"].amount / part.Resources["HabWatts"].maxAmount) * Settings.TemperatureIdeal * 2.0;
-      }
 
       if (Lib.IsFlight())
       {
-        atmoflux = atmo_flux(vessel, FlightGlobals.currentMainBody, vessel.altitude, Cache.VesselInfo(vessel).surface, Cache.VesselInfo(vessel).env_temperature, Cache.VesselInfo(vessel).hab_temperature);
-        envflux = env_flux(Cache.VesselInfo(vessel).surface, Cache.VesselInfo(vessel).env_temperature, Cache.VesselInfo(vessel).hab_temperature);
-        kerbalflux = kerbal_flux(vessel.GetCrewCount());
-        netflux = Cache.VesselInfo(vessel).net_flux;
+        atmoflux = Cache.VesselInfo(vessel).hab_atmo_flux;
+        envflux = Cache.VesselInfo(vessel).hab_env_flux;
+        kerbalflux = Cache.VesselInfo(vessel).hab_kerbal_flux;
+        netflux = Cache.VesselInfo(vessel).hab_total_flux;
       }
 
 
@@ -390,7 +386,26 @@ namespace KERBALISM {
     // return habitat temperature in kelvin
     public static double hab_temperature(Vessel v)
     {
-      return ResourceCache.Info(v, "HabWatts").level * Settings.TemperatureIdeal * 2.0;
+      return hab_temperature(ResourceCache.Info(v, "PosWatts").level, ResourceCache.Info(v, "NegWatts").level);
+    }
+
+    // return habitat temperature in kelvin
+    // PosWatts : full = 295 K, empty = 345 K
+    // NegWatts : full = 295 K, empty = 245 K
+    public static double hab_temperature(double posWattsLevel, double negWattsLevel)
+    {
+      if (posWattsLevel < 1.0 && negWattsLevel == 1.0)
+      {
+        return Settings.TemperatureIdeal + ((1.0 - posWattsLevel) * Settings.TemperatureThreshold * 2.5);
+      }
+      else if (negWattsLevel < 1.0 && posWattsLevel == 1.0)
+      {
+        return Settings.TemperatureIdeal - ((1.0 - negWattsLevel) * Settings.TemperatureThreshold * 2.5);
+      }
+      else
+      {
+        return Settings.TemperatureIdeal;
+      }
     }
 
     // return difference between ideal temperature and habitat temperature, minus the threshold
@@ -401,14 +416,24 @@ namespace KERBALISM {
         Math.Min(hab_temperature - Settings.TemperatureIdeal + Settings.TemperatureThreshold, 0.0);
     }
 
-    // return heating/cooling need modifier minus 1/4 the threshold and smoothed
-    public static double climatization_modifier(double hab_temperature)
+    public static double above_ideal_pos_modifier(double negWattsLevel, double hab_total_flux)
     {
-      double threshold = Settings.TemperatureThreshold * 0.25;
-      double tempdiff = hab_temperature - Settings.TemperatureIdeal;
-      return (tempdiff) > 0 ?
-        Math.Min(Math.Max(tempdiff - threshold, 0.0) / threshold, 1.0):
-        Math.Max(Math.Min(tempdiff + threshold, 0.0) / threshold, -1.0);
+      return (negWattsLevel == 1.0 && hab_total_flux > 0) ? hab_total_flux : 0.0;
+    }
+
+    public static double above_ideal_neg_modifier(double posWattsLevel, double hab_total_flux)
+    {
+      return (posWattsLevel == 1.0 && hab_total_flux > 0) ? hab_total_flux : 0.0;
+    }
+
+    public static double below_ideal_pos_modifier(double negWattsLevel, double hab_total_flux)
+    {
+      return (negWattsLevel == 1.0 && hab_total_flux < 0) ? Math.Abs(hab_total_flux) : 0.0;
+    }
+
+    public static double below_ideal_neg_modifier(double posWattsLevel, double hab_total_flux)
+    {
+      return (posWattsLevel == 1.0 && hab_total_flux < 0) ? Math.Abs(hab_total_flux) : 0.0;
     }
 
     // return net atmospheric related heat flux for the vessel habitat (Watt)
@@ -436,39 +461,30 @@ namespace KERBALISM {
       return 0.0;
     }
 
-
-    // return net environnement related heat flux for the vessel habitat (Watt)
-    public static double env_flux(double surface, double temperature, double hab_temperature)
+    // return net environnement related heat flux for the vessel habitat (watt/s)
+    // not entirely realistic but balanced for the following goals :
+    // - around 0.15 ec/s required for a Mk1-2 command pod
+    // - thermal equilibrium around 275 K at Kerbin
+    // - radiators are required in the inner system (Eve, Moho)
+    // - heating is required in the outer system (Duna and beyond)
+    public static double env_flux(double hab_surface, double surface_temperature, double hab_temperature, double env_flux)
     {
+      const double exposedSurfaceFactor = 0.25;
+      const double habAbsorptivity = 0.100;
+      const double habEmissivity = 0.070;
+      const double habFeedback =  0.055;
+
       return
-      // incoming flux :
-      (
-        PhysicsGlobals.StefanBoltzmanConstant * Settings.HabAbsorptivity * surface
-        *
-        (
-          // solar + albedo + body + background flux for exposed surface
-          (Math.Pow(temperature, 4.0) * Settings.ExposedSurfaceFactor) 
-          +
-          // background flux for non-exposed surface
-          (Math.Pow(Sim.BlackBodyTemperature(Sim.BackgroundFlux()), 4.0) * (1.0 - Settings.ExposedSurfaceFactor))
-        )
-      )
-      -
-      // outgoing (radiative) flux :
-      (
-        PhysicsGlobals.StefanBoltzmanConstant * Settings.HabEmissivity * surface
-        *
-        (
-          // flux for exposed surface
-          (Math.Pow(Math.Max(temperature, hab_temperature), 4.0) * Settings.ExposedSurfaceFactor) 
-          +
-          // flux for non-exposed surface
-          (Math.Pow(hab_temperature, 4.0) * (1.0 - Settings.ExposedSurfaceFactor))
-        )
-      );
+        // incoming flux for exposed surface from solar + albedo + body + background flux 
+        (env_flux * hab_surface * exposedSurfaceFactor * habAbsorptivity)
+        // outgoing radiative flux for exposed surface, using surface temperature
+        - (PhysicsGlobals.StefanBoltzmanConstant * Math.Pow(surface_temperature, 4.0) * hab_surface * exposedSurfaceFactor * habEmissivity)
+        // other outgoing radiative flux, using hab temperature to create a self-regulating feedback
+        - (PhysicsGlobals.StefanBoltzmanConstant * Math.Pow(hab_temperature, 4.0) * hab_surface * habFeedback);
     }
-  
-    // return heat flux due to crew bodies (Watt)
+
+
+    // return heat flux due to crew bodies (watt/s)
     public static double kerbal_flux(int crew_count)
     {
       return crew_count * Settings.KerbalHeat; // kerbal bodies heat production

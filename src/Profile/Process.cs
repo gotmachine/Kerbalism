@@ -10,6 +10,7 @@ public sealed class Process
   public Process(ConfigNode node)
   {
     name = Lib.ConfigValue(node, "name", string.Empty);
+    canUnderflow = Lib.ConfigValue(node, "canUnderflow", true);
     modifiers = Lib.Tokenize(Lib.ConfigValue(node, "modifier", string.Empty), ',');
 
     // check that name is specified
@@ -68,6 +69,7 @@ public sealed class Process
     {
       // prepare recipe
       resource_recipe recipe = new resource_recipe();
+      recipe.canUnderflow = canUnderflow;
       foreach(var p in inputs)
       {
         recipe.Input(p.Key, p.Value * k * elapsed_s);
@@ -85,6 +87,7 @@ public sealed class Process
   public Dictionary<string, double> inputs;     // input resources and rates
   public Dictionary<string, double> outputs;    // output resources and rates
   public DumpSpecs dump;                        // set of output resources that should dump overboard
+  public bool canUnderflow = true;              // is an input only process allowed to run if one of the inputs is unavailable ?
 }
 
 

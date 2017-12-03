@@ -93,6 +93,7 @@ public static class Telemetry
     if (Features.Poisoning) p.content("co2 level", Lib.Color(Lib.HumanReadablePerc(vi.poisoning, "F2"), vi.poisoning > Settings.PoisoningThreshold, "yellow"));
     if (!v.isEVA)
     {
+        p.content("temperature", Lib.HumanReadableTemp(vi.hab_temperature));
       if (Features.Pressure) p.content("pressure", Lib.HumanReadablePressure(vi.pressure * Sim.PressureAtSeaLevel()));
       if (Features.Shielding) p.content("shielding", Habitat.shielding_to_string(vi.shielding));
       if (Features.LivingSpace) p.content("living space", Habitat.living_space_to_string(vi.living_space));

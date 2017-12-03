@@ -57,7 +57,7 @@ public sealed class Rule
     resource_info res = input.Length > 0 ? resources.Info(v, input) : null;
 
     // determine message variant
-    uint variant = vi.env_temperature < Settings.TemperatureThreshold ? 0 : 1u;
+    uint variant = vi.hab_temperature < Settings.TemperatureIdeal ? 0 : 1u;
 
     // get product of all environment modifiers
     double k = Modifiers.evaluate(v, vi, resources, modifiers);

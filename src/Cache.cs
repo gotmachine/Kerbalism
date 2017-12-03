@@ -69,7 +69,7 @@ namespace KERBALISM {
       landed = Lib.Landed(v);
 
       // temperature at vessel position
-      env_temperature = Sim.EnvTemperature(v, position, sunlight, atmo_factor, out solar_flux, out albedo_flux, out body_flux, out total_flux);
+      env_temperature = Sim.EnvTemperature(v, position, sunlight, atmo_factor, out solar_flux, out albedo_flux, out body_flux, out total_flux, out surface_temperature);
 
       // radiation
       radiation = Radiation.Compute(v, position, gamma_transparency, sunlight, out blackout, out magnetosphere, out inner_belt, out outer_belt, out interstellar);
@@ -98,9 +98,16 @@ namespace KERBALISM {
       shielding = Habitat.shielding(v);
       living_space = Habitat.living_space(v);
       hab_temperature = Habitat.hab_temperature(v);
-      net_flux = Habitat.env_flux(surface, env_temperature, hab_temperature) + Habitat.kerbal_flux(crew_count) + Habitat.atmo_flux(v, v.mainBody, v.altitude, surface, env_temperature, hab_temperature);
+      hab_env_flux = Habitat.env_flux(surface, surface_temperature, hab_temperature, total_flux);
+      hab_kerbal_flux = Habitat.kerbal_flux(crew_count);
+      hab_atmo_flux = Habitat.atmo_flux(v, v.mainBody, v.altitude, surface, env_temperature, hab_temperature);
+      hab_total_flux = hab_env_flux + hab_kerbal_flux + hab_atmo_flux;
+      above_ideal_pos_modifier = Habitat.above_ideal_pos_modifier(ResourceCache.Info(v, "NegWatts").level, hab_total_flux);
+      above_ideal_neg_modifier = Habitat.above_ideal_neg_modifier(ResourceCache.Info(v, "PosWatts").level, hab_total_flux);
+      below_ideal_pos_modifier = Habitat.below_ideal_pos_modifier(ResourceCache.Info(v, "NegWatts").level, hab_total_flux);
+      below_ideal_neg_modifier = Habitat.below_ideal_neg_modifier(ResourceCache.Info(v, "PosWatts").level, hab_total_flux);
       temperature_modifier = Habitat.temperature_modifier(hab_temperature);
-      climatization_modifier = Habitat.climatization_modifier(hab_temperature);
+      //climatization_modifier = Habitat.climatization_modifier(hab_temperature);
       comforts = new Comforts(v, landed, crew_count > 1, connection.linked);
 
       // data about greenhouses
@@ -125,11 +132,18 @@ namespace KERBALISM {
     public double       albedo_flux;          // solar flux reflected from the nearest body
     public double       body_flux;            // infrared radiative flux from the nearest body
     public double       total_flux;           // total flux at vessel position
+    public double       surface_temperature;  // surface temperature of the vessel at vessel position
     public double       env_temperature;      // external temperature at vessel position
     public double       hab_temperature;      // internal temperature of hottest habitat part
-    public double       net_flux;             // habitat net thermal flux (W)
+    public double       hab_env_flux;         // thermal flux from sun + albedo + body for the whole habitat (W/s)
+    public double       hab_kerbal_flux;      // thermal flux from kerbal bodies for the whole habitat (W/s)
+    public double       hab_atmo_flux;        // thermal flux from atmospheric conduction for the whole habitat (W/s)
+    public double       hab_total_flux;             // habitat net thermal flux (W/s)
+    public double       above_ideal_pos_modifier;
+    public double       above_ideal_neg_modifier;
+    public double       below_ideal_pos_modifier;
+    public double       below_ideal_neg_modifier;
     public double       temperature_modifier; // habitat temperature difference, minus the threshold
-    public double       climatization_modifier; // habitat temperature difference, minus 1/4 the threshold
     public double       radiation;            // environment radiation at vessel position
     public bool         magnetosphere;        // true if vessel is inside a magnetopause (except the heliosphere)
     public bool         inner_belt;           // true if vessel is inside a radiation belt

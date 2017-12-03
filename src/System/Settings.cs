@@ -34,9 +34,6 @@ public static class Settings
     TemperatureIdeal            = Lib.ConfigValue(cfg, "TemperatureIdeal",            295.0);
     TemperatureThreshold        = Lib.ConfigValue(cfg, "TemperatureThreshold",        20.0);
     HabSpecificHeat             = Lib.ConfigValue(cfg, "HabSpecificHeat",             25000.0);
-    HabAbsorptivity             = Lib.ConfigValue(cfg, "HabAbsorptivity",             0.15);
-    HabEmissivity               = Lib.ConfigValue(cfg, "HabEmissivity",               0.1);
-    ExposedSurfaceFactor        = Lib.ConfigValue(cfg, "ExposedSurfaceFactor",        0.25);
     KerbalHeat                  = Lib.ConfigValue(cfg, "KerbalHeat",                  30.0);
 
     // quality-of-life
@@ -105,9 +102,6 @@ public static class Settings
   public static double TemperatureIdeal;                  // ideal living temperature (K)
   public static double TemperatureThreshold;              // acceptable difference from ideal temperature (K)
   public static double HabSpecificHeat;                   // heat capacity of habitat (J/m^3/K)
-  public static double HabAbsorptivity;                   // habitat surface absorptivity factor
-  public static double HabEmissivity;                     // habitat surface emissivity factor
-  public static double ExposedSurfaceFactor;              // % of habitat surface exposed to full flux intensity
   public static double KerbalHeat;                        // Kerbal body heat production (W)
 
   // quality-of-life
