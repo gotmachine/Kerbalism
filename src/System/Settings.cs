@@ -31,10 +31,9 @@ public static class Settings
     Automation                  = Lib.ConfigValue(cfg, "Automation",                  false);
 
     // temperature
-    SurvivalTemperature         = Lib.ConfigValue(cfg, "SurvivalTemperature",         295.0);
-    SurvivalRange               = Lib.ConfigValue(cfg, "SurvivalRange",               25.0);
-    SurvivalTime                = Lib.ConfigValue(cfg, "SurvivalTime",                86400.0);
-    HabSpecificHeat             = Lib.ConfigValue(cfg, "HabSpecificHeat",             100000.0);
+    TemperatureIdeal            = Lib.ConfigValue(cfg, "TemperatureIdeal",            295.0);
+    TemperatureThreshold        = Lib.ConfigValue(cfg, "TemperatureThreshold",        20.0);
+    HabSpecificHeat             = Lib.ConfigValue(cfg, "HabSpecificHeat",             25000.0);
     HabAbsorptivity             = Lib.ConfigValue(cfg, "HabAbsorptivity",             0.15);
     HabEmissivity               = Lib.ConfigValue(cfg, "HabEmissivity",               0.1);
     ExposedSurfaceFactor        = Lib.ConfigValue(cfg, "ExposedSurfaceFactor",        0.25);
@@ -102,10 +101,9 @@ public static class Settings
   public static bool   SpaceWeather;                      // coronal mass ejections
   public static bool   Automation;                        // control vessel components using scripts
 
-  // temperature
-  public static double SurvivalTemperature;               // ideal living temperature
-  public static double SurvivalRange;                     // sweet spot around survival temperature
-  public static double SurvivalTime;                      // time of survival at SurvivalRange limit (s)
+    // temperature
+  public static double TemperatureIdeal;                  // ideal living temperature (K)
+  public static double TemperatureThreshold;              // acceptable difference from ideal temperature (K)
   public static double HabSpecificHeat;                   // heat capacity of habitat (J/m^3/K)
   public static double HabAbsorptivity;                   // habitat surface absorptivity factor
   public static double HabEmissivity;                     // habitat surface emissivity factor

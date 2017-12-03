@@ -268,7 +268,7 @@ public static class Science
         case "Atmosphere":      b = body.atmosphere && v.altitude < body.atmosphereDepth;                                   break;
         case "Ocean":           b = body.ocean && v.altitude < 0.0;                                                         break;
         case "Space":           b = body.flightGlobalsIndex != 0 && !Lib.Landed(v) && v.altitude > body.atmosphereDepth;    break;
-        case "AbsoluteZero":    b = vi.temperature < 30.0;                                                                  break;
+        case "AbsoluteZero":    b = vi.env_temperature < 30.0;                                                                  break;
         case "InnerBelt":       b = vi.inner_belt;                                                                          break;
         case "OuterBelt":       b = vi.outer_belt;                                                                          break;
         case "Magnetosphere":   b = vi.magnetosphere;                                                                       break;

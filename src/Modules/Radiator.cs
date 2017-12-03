@@ -157,7 +157,7 @@ namespace KERBALISM
               vi.body_flux, // body_flux
               vi.albedo_flux, // albedo_flux
               vi.solar_flux, // solar_flux
-              vi.temperature, // env_temperature
+              vi.env_temperature, // env_temperature
               vessel.mainBody.GetPressure(Math.Max(vessel.altitude, 0.0)), // env_pressure
               surface,
               radiator_type,
@@ -213,7 +213,7 @@ namespace KERBALISM
         info.body_flux, // body_flux
         info.albedo_flux, // albedo_flux
         info.solar_flux, // solar_flux
-        info.temperature, // env_temperature
+        info.env_temperature, // env_temperature
         v.mainBody.GetPressure(Math.Max(v.altitude, 0.0)), // env_pressure
         surface,
         Lib.Proto.GetString(m, "radiator_type"),

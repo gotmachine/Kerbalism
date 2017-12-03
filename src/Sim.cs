@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.Collections.Generic;
+using System.Linq;
 
 namespace KERBALISM {
 
@@ -327,7 +328,7 @@ public static class Sim
   }
 
   // return temperature of a vessel
-  public static double Temperature(Vessel v, Vector3d position, double sunlight, double atmo_factor, out double solar_flux, out double albedo_flux, out double body_flux, out double total_flux)
+  public static double EnvTemperature(Vessel v, Vector3d position, double sunlight, double atmo_factor, out double solar_flux, out double albedo_flux, out double body_flux, out double total_flux)
   {
     // get vessel body
     CelestialBody body = v.mainBody;
@@ -394,11 +395,10 @@ public static class Sim
   public static double TempDiff(double k, CelestialBody body, bool landed)
   {
     if (body.flightGlobalsIndex == FlightGlobals.GetHomeBodyIndex() && landed) return 0.0;
-    return (k - Settings.SurvivalTemperature) > 0 ?
-      Math.Max(k - Settings.SurvivalTemperature - Settings.SurvivalRange, 0.0) :
-      Math.Min(k - Settings.SurvivalTemperature + Settings.SurvivalRange, 0.0);
+    return (k - Settings.TemperatureIdeal) > 0 ?
+      Math.Max(k - Settings.TemperatureIdeal - Settings.TemperatureThreshold, 0.0) :
+      Math.Min(k - Settings.TemperatureIdeal + Settings.TemperatureThreshold, 0.0);
   }
-
 
   // --------------------------------------------------------------------------
   // ATMOSPHERE
