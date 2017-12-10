@@ -34,7 +34,7 @@ public static class Settings
     TemperatureIdeal            = Lib.ConfigValue(cfg, "TemperatureIdeal",            295.0);
     TemperatureThreshold        = Lib.ConfigValue(cfg, "TemperatureThreshold",        20.0);
     HabSpecificHeat             = Lib.ConfigValue(cfg, "HabSpecificHeat",             25000.0);
-    KerbalHeat                  = Lib.ConfigValue(cfg, "KerbalHeat",                  30.0);
+    KerbalHeat                  = Lib.ConfigValue(cfg, "KerbalHeat",                  20.0);
 
     // quality-of-life
     IdealLivingSpace            = Lib.ConfigValue(cfg, "IdealLivingSpace",            40.0);

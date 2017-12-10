@@ -385,7 +385,7 @@ namespace KERBALISM {
       dist += FlightGlobals.Bodies[0].Radius;
 
       // calculate solar flux
-      return SolarLuminosity() / (12.566370614359172 * dist * dist);
+      return SolarLuminosity() / (12.566* 370614359172 * dist * dist);
     }
 
     // return solar flux at home

@@ -443,13 +443,15 @@ namespace KERBALISM {
       // Assumption : heat transfer coeficient at 100 kPa is 10 W/m²/K = 0.1 W/m²/K/kPA
       if (mainBody.atmosphere && altitude < mainBody.atmosphereDepth)
       {
-        // when loaded, use hottest habitat part temperature if there is a signifiant (> 50K) difference with our calculated environnement temperature
-        if (v != null && v.loaded)
+        // when flying, use hottest habitat part temperature if there is a signifiant (> 50K) difference with our calculated environnement temperature
+        // used to account for reentry / aero heat
+        // at high timewarp speeds, stock heat calculations are unreliable, so we don't use them when landed
+        if (v != null && v.loaded && !v.Landed)
         {
           List<Part> habitat = v.Parts.FindAll(p => p.Modules.Contains<Habitat>());
           if (habitat.Count > 0)
           {
-            double loaded_temperature = habitat.Max(p => p.skinTemperature);
+            double loaded_temperature = habitat.Max(p => p.temperature);
             if (Math.Abs(loaded_temperature - env_temperature) > 50)
             {
               return (loaded_temperature - hab_temperature) * surface * mainBody.GetPressure(altitude) * 0.1;
@@ -463,16 +465,15 @@ namespace KERBALISM {
 
     // return net environnement related heat flux for the vessel habitat (watt/s)
     // not entirely realistic but balanced for the following goals :
-    // - around 0.15 ec/s required for a Mk1-2 command pod
-    // - thermal equilibrium around 275 K at Kerbin
+    // - around 0.05 ec/s required for a Mk1-2 command pod in kerbin orbit
     // - radiators are required in the inner system (Eve, Moho)
     // - heating is required in the outer system (Duna and beyond)
     public static double env_flux(double hab_surface, double surface_temperature, double hab_temperature, double env_flux)
     {
       const double exposedSurfaceFactor = 0.25;
-      const double habAbsorptivity = 0.100;
-      const double habEmissivity = 0.070;
-      const double habFeedback =  0.055;
+      const double habAbsorptivity = 0.175;
+      const double habEmissivity = 0.145;
+      const double habEmissivityFeedback =  0.050;
 
       return
         // incoming flux for exposed surface from solar + albedo + body + background flux 
@@ -480,7 +481,7 @@ namespace KERBALISM {
         // outgoing radiative flux for exposed surface, using surface temperature
         - (PhysicsGlobals.StefanBoltzmanConstant * Math.Pow(surface_temperature, 4.0) * hab_surface * exposedSurfaceFactor * habEmissivity)
         // other outgoing radiative flux, using hab temperature to create a self-regulating feedback
-        - (PhysicsGlobals.StefanBoltzmanConstant * Math.Pow(hab_temperature, 4.0) * hab_surface * habFeedback);
+        - (PhysicsGlobals.StefanBoltzmanConstant * Math.Pow(hab_temperature, 4.0) * hab_surface * habEmissivityFeedback);
     }
 
 
